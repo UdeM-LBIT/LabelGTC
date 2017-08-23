@@ -1,0 +1,21 @@
+Metadata-Version: 1.1
+Name: ProfileNJ
+Version: 20161018
+Summary: profileNJ correct polytomies in tree, using minimum reconciliation (with specietree) cost, and Neighbor-Joining algorithm for clustering
+Home-page: https://github.com/UdeM-LBIT/profileNJ
+Author: Emmanuel Noutahi
+Author-email: emmanuel.noutahi@hotmail.ca
+License: WTFPL
+Download-URL: https://github.com/UdeM-LBIT/profileNJ/tarball/v20161018
+Description: 
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Natural Language :: English
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
