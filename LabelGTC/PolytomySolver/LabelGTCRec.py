@@ -317,13 +317,6 @@ class LabelGTC:
     def polyRes(self):
         """Using PolytomySolver Algorithm"""
 
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
-
-        #Transforming the genes Tree in a single polytomy
-        for g_node in self.genesTree.traverse("levelorder"):
-            if not g_node.is_root() and g_node.cst == 0:
-                g_node.delete()
-
         print(self.genesTree)
         dupcost = 1
         losscost = 1
@@ -348,12 +341,29 @@ class LabelGTC:
         print(TreeClass(str(r[0])))
 
 
-    def m_polyRes(self):
-        """Using M-PolyRes Algorithm"""
+
+    def init_polyRes(self):
+        """Initializing PolytomySolver Algorithm"""
+
+        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
+
+        #Transforming the genes Tree in a single polytomy
+        for g_node in self.genesTree.traverse("levelorder"):
+            if not g_node.is_root() and g_node.cst == 0:
+                g_node.delete()
+
+        self.polyRes()
+
+
+    def init_m_polyRes(self):
+        """Iinitializing M-PolyRes Algorithm"""
 
         #Transforming the genes Tree in a multi polytomies tree
         self.genesTree.contract_tree(self.threshold, 'binconfidence')
         print(self.genesTree)
+
+        self.polyRes()
+
 
 
     def minSGT(self):
@@ -429,7 +439,7 @@ class LabelGTC:
         if onlyLeaves:
             print("-------> Using M-PolyRes algorithm")
             self.isGlobalCase = False
-            self.m_polyRes()
+            self.init_m_polyRes()
 
         #Testing global case
         else:
@@ -469,7 +479,7 @@ class LabelGTC:
                 self.isGlobalCase = False
                 global special_case
                 special_case = True
-                self.polyRes()
+                self.init_polyRes()
 
             if minTRSCompatible and cpt > 2:
                 print("-------> Using minTRS algorithm")
