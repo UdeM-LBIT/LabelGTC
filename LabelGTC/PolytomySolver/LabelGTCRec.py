@@ -299,17 +299,18 @@ class LabelGTC:
                     lgtc.mergeResolutions()
 
                     #Attaching back the tree to the previous instance genes tree
-                    up.add_child(g_node)
 
                     if lgtc.getIsGlobalCase():
                         print("________________________________________________________________________________________________________________________")
-                        print(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
+                        print(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["name", "lcse"]))
                         print("________________________________________________________________________________________________________________________")
-                        lgtc.minSGT()
+                        modified_tree = lgtc.minSGT()
+
+                    up.add_child(modified_tree)
 
         if self.id == 1:
             print("________________________________________________________________________________________________________________________")
-            print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
+            print(self.genesTree.get_ascii(show_internal=True, attributes=["name", "lcse"]))
             print("________________________________________________________________________________________________________________________")
             self.minSGT()
 
@@ -378,12 +379,16 @@ class LabelGTC:
             newStrTree = strTree.replace("_", "__")
             ctp_minSGT += newStrTree
 
+        ctp_minSGT2 = ctp_minSGT.replace("____", "__")
+
         for tree in self.covSetEdge_minSGT:
             strTree = tree.write()
             newStrTree = strTree.replace("_", "__")
             cst_minSGT += newStrTree
 
-        cst_minSGT2 = cst_minSGT[0:len(cst_minSGT)-1]
+        res_cst_minSGT = cst_minSGT.replace("____", "__")
+
+        cst_minSGT2 = res_cst_minSGT[0:len(res_cst_minSGT)-1]
 
         print(cst_minSGT2)
 
@@ -402,7 +407,7 @@ class LabelGTC:
         print(self.clades_to_preserve)
         print("\n")
         print("STR CLADES TO PRESERVE :")
-        print(ctp_minSGT)
+        print(ctp_minSGT2)
         print("\n")
         print("GENES TREE :")
         print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
@@ -414,10 +419,13 @@ class LabelGTC:
         print(gcontent)
         print("\n")
 
-        getMinSGT(gcontent, scontent, True, ctp_minSGT, "", "")
+        res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "")
 
-        print(Tree("((((x__B, b__B), a__A), (e__C, y__C)), ((i__B, k__A)0, ((c__C, j__A)1, (d__C, (g__A, h__A)2)3)4)5);"))
+        returned_tree = TreeClass(res.strip().split("\n")[-1])
 
+        print(returned_tree)
+
+        return returned_tree
 
     def mergeResolutions(self):
         """Using the different kind of resulutions according to the labelling of the tree of genes"""

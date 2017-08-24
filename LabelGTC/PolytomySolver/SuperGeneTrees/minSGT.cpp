@@ -134,7 +134,6 @@ string DoSuperGeneTree(string gcontent, string scontent, bool preserveDupSpec, s
         Node* geneTree = NewickLex::ParseNewickString(tmpnewick);
 
         unordered_map<Node*, Node*> lcamap = GeneSpeciesTreeUtil::Instance()->GetLCAMapping(geneTree, speciesTree, "__", 1);
-        cout<<"tutu"<< endl;
 
         geneTrees.push_back(geneTree);
         lca_mappings.push_back(lcamap);
