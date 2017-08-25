@@ -346,7 +346,7 @@ class LabelGTC:
     def init_polyRes(self):
         """Initializing PolytomySolver Algorithm"""
 
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
+        print(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
 
         #Transforming the genes Tree in a single polytomy
         for g_node in self.genesTree.traverse("levelorder"):
@@ -410,7 +410,7 @@ class LabelGTC:
         print(ctp_minSGT2)
         print("\n")
         print("GENES TREE :")
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
+        print(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
         print("\n")
         print("COV SET TREE MINSGT :")
         print(self.covSetEdge_minSGT)

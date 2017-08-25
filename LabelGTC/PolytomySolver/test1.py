@@ -37,9 +37,9 @@ print("\n\n\n\n")
 
 
 
-g = TreeClass("((((a_A,x_B)0.2,(b_B,e_C)0.2)0.2,y_C)0.2,((i_B,k_A)0.1,((c_C, j_A)0.1,(d_C,(g_A,h_A)0.2)0.8)0.2)0.8)0.2;")
+g = TreeClass("((((a_A,x_B)0.2,(b_B,e_C)0.2)0.2,y_C)0.2,((i_B,k_A)0.1,((c_C, j_A)0.1,(d_B,(g_C,h_A)0.2)0.8)0.2)0.8)0.2;")
 
-cst = [TreeClass("a_A;"),TreeClass("x_B;"), TreeClass("y_C;"), TreeClass("(b_B,e_C);"), TreeClass("(c_C,j_A);"), TreeClass("(g_A,h_A);"), TreeClass("d_C;"), TreeClass("(i_B,k_A);")]
+cst = [TreeClass("a_A;"),TreeClass("x_B;"), TreeClass("y_C;"), TreeClass("(b_B,e_C);"), TreeClass("(c_C,j_A);"), TreeClass("(g_C,h_A);"), TreeClass("d_B;"), TreeClass("(i_B,k_A);")]
 
 print("-----COVERING SET OF TREES-----")
 print("\n")
