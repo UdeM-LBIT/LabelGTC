@@ -142,21 +142,25 @@ class LabelGTC:
     def binaryLabeling(self):
         """Binarization of the support for each node according to the threshold"""
 
+        print("toto")
+
+        if self.id == 1:
         #checking if the covering set of tree is conform with the tree of genes
-        if self.checkCovSetTree():
+            if not self.checkCovSetTree():
+                raise Exception("The covering set of tree is not conform with the tree of genes")
 
-            for g_node in self.genesTree.traverse("levelorder"):
 
-                    #adding the binary feature
-                    if g_node.support >= self.threshold:
-                        g_node.add_features(binconfidence = 1)
-                        if not g_node.is_leaf():
-                            self.clades_to_preserve.append(g_node)
-                    else:
-                        g_node.add_features(binconfidence = 0)
+        for g_node in self.genesTree.traverse("levelorder"):
 
-        else:
-            raise Exception("The covering set of tree is not conform with the tree of genes")
+            #adding the binary feature
+            if g_node.support >= self.threshold:
+                g_node.add_features(binconfidence = 1)
+                if not g_node.is_leaf():
+                    self.clades_to_preserve.append(g_node)
+            else:
+                g_node.add_features(binconfidence = 0)
+
+
 
 
 
@@ -410,7 +414,7 @@ class LabelGTC:
         print(ctp_minSGT2)
         print("\n")
         print("GENES TREE :")
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
+        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name"]))
         print("\n")
         print("COV SET TREE MINSGT :")
         print(self.covSetEdge_minSGT)
@@ -436,7 +440,8 @@ class LabelGTC:
         minSGTCompatible = True
         cpt = 0
 
-        self.binaryLabeling()
+        if self.id == 1:
+            self.binaryLabeling()
 
         #Testing the case where the covering set of trees is only composed by leaves
         for subtree in self.covSetTree:
