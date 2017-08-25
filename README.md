@@ -1,7 +1,7 @@
 # LabelGTC
 Implementation of LabelGTC algorithm
 
-To test it : python -m LabelGTC.PolytomySolver.test1
+To test it : python -m LabelGTC.tests.test1
 (from the root folder)
 
 Some little details still missing, but the recursion on minSGT seems to work properly
