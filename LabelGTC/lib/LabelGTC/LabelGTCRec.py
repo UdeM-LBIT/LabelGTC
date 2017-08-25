@@ -36,6 +36,8 @@ from ..TreeLib import TreeUtils, TreeClass
 treated_trees = []
 special_case = False
 nbCalls = 0
+
+global clades_to_preserve_sgt
 clades_to_preserve_sgt = []
 
 class LabelGTC:
@@ -417,7 +419,6 @@ class LabelGTC:
         print(scontent)
         print("\n")
         print("CLADES TO PRESERVE :")
-        global clades_to_preserve_sgt
         print(clades_to_preserve_sgt)
         print("\n")
         print("STR CLADES TO PRESERVE :")
@@ -439,7 +440,6 @@ class LabelGTC:
 
         print(returned_tree)
 
-        global clades_to_preserve_sgt
         clades_to_preserve_sgt.append(returned_tree)
 
         return returned_tree

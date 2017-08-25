@@ -18,7 +18,19 @@
         "language": "c++", 
         "name": "lib.SGT.minSGT", 
         "sources": [
-            "src/minSGT.pyx"
+            "src/minSGT.pyx", 
+            "src/SuperGeneTrees/genesubtreecorrector.cpp", 
+            "src/SuperGeneTrees/supergenetreemaker.cpp", 
+            "src/SuperGeneTrees/minSGT.cpp", 
+            "src/SuperGeneTrees/trees/polysolver_distance.cpp", 
+            "src/SuperGeneTrees/trees/polysolver.cpp", 
+            "src/SuperGeneTrees/trees/node.cpp", 
+            "src/SuperGeneTrees/trees/treeinfo.cpp", 
+            "src/SuperGeneTrees/trees/polysolver_nad.cpp", 
+            "src/SuperGeneTrees/trees/paralogycorrector.cpp", 
+            "src/SuperGeneTrees/trees/newicklex.cpp", 
+            "src/SuperGeneTrees/trees/treeiterator.cpp", 
+            "src/SuperGeneTrees/trees/genespeciestreeutil.cpp"
         ]
     }, 
     "module_name": "lib.SGT.minSGT"
