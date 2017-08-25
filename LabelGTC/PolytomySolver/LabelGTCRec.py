@@ -38,6 +38,7 @@ from ..TreeLib import TreeUtils, TreeClass
 treated_trees = []
 special_case = False
 nbCalls = 0
+clades_to_preserve_sgt = []
 
 class LabelGTC:
 
@@ -142,8 +143,6 @@ class LabelGTC:
     def binaryLabeling(self):
         """Binarization of the support for each node according to the threshold"""
 
-        print("toto")
-
         if self.id == 1:
         #checking if the covering set of tree is conform with the tree of genes
             if not self.checkCovSetTree():
@@ -155,12 +154,10 @@ class LabelGTC:
             #adding the binary feature
             if g_node.support >= self.threshold:
                 g_node.add_features(binconfidence = 1)
-                if not g_node.is_leaf():
+                if not g_node.is_leaf() and not g_node.has_feature("root") and not g_node.is_root():
                     self.clades_to_preserve.append(g_node)
             else:
                 g_node.add_features(binconfidence = 0)
-
-
 
 
 
@@ -302,21 +299,28 @@ class LabelGTC:
 
                     lgtc.mergeResolutions()
 
+                    lgtc.binaryLabeling()
+
                     #Attaching back the tree to the previous instance genes tree
 
                     if lgtc.getIsGlobalCase():
                         print("________________________________________________________________________________________________________________________")
-                        print(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["name", "lcse"]))
+                        print(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
                         print("________________________________________________________________________________________________________________________")
                         modified_tree = lgtc.minSGT()
 
                     up.add_child(modified_tree)
 
+
         if self.id == 1:
             print("________________________________________________________________________________________________________________________")
-            print(self.genesTree.get_ascii(show_internal=True, attributes=["name", "lcse"]))
+            print(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
             print("________________________________________________________________________________________________________________________")
             self.minSGT()
+            global clades_to_preserve_sgt
+            print(clades_to_preserve_sgt)
+            for tree in clades_to_preserve_sgt:
+                print tree
 
 
     def polyRes(self):
@@ -378,7 +382,14 @@ class LabelGTC:
         cst_minSGT = ""
         str_speciesTree = ""
 
-        for tree in self.clades_to_preserve:
+        global clades_to_preserve_sgt
+        for clade1 in clades_to_preserve_sgt:
+            for clade2 in clades_to_preserve_sgt:
+                if clade1 != clade2:
+                    if set(clade1.get_leaf_names()).issubset(set(clade2.get_leaf_names())):
+                        clades_to_preserve_sgt.remove(clade1)
+
+        for tree in clades_to_preserve_sgt:
             strTree = tree.write()
             newStrTree = strTree.replace("_", "__")
             ctp_minSGT += newStrTree
@@ -408,7 +419,8 @@ class LabelGTC:
         print(scontent)
         print("\n")
         print("CLADES TO PRESERVE :")
-        print(self.clades_to_preserve)
+        global clades_to_preserve_sgt
+        print(clades_to_preserve_sgt)
         print("\n")
         print("STR CLADES TO PRESERVE :")
         print(ctp_minSGT2)
@@ -428,6 +440,9 @@ class LabelGTC:
         returned_tree = TreeClass(res.strip().split("\n")[-1])
 
         print(returned_tree)
+
+        global clades_to_preserve_sgt
+        clades_to_preserve_sgt.append(returned_tree)
 
         return returned_tree
 
