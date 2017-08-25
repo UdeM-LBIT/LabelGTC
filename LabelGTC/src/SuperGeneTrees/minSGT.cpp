@@ -82,12 +82,9 @@ string DoSubtreeCorrection(string gcontent, string scontent, bool preserveDupSpe
                     <<LOSSES_aftercorrection<<","
                     <<(DUPS_aftercorrection + LOSSES_aftercorrection)<<","
                     <<marked_new.size();
+                cout<<result<<endl;
 
-        }
-        else
-        {
 
-            cout<<result<<endl;
         }
 
         //cout<<NewickLex::ToNewickString(newgenetree)<<endl;
@@ -177,20 +174,13 @@ string DoSuperGeneTree(string gcontent, string scontent, bool preserveDupSpec, s
 
 
     string result = "";
-    if (!superTree)
-    {
-        cout<<"It seems that no solution exists."<<endl;
-    }
-    else
+    if (superTree)
     {
         result = NewickLex::ToNewickString(superTree);
-        if (outputmode == "")
+        if (outputmode == "stats")
         {
+
             cout<<"DLCOST="<<cost<<endl;
-            cout<<result<<endl;
-        }
-        else if (outputmode == "stats")
-        {
             //stats: dup, loss, rec
             unordered_map<Node*, Node*> lcamap_new = GeneSpeciesTreeUtil::Instance()->GetLCAMapping(superTree, speciesTree, "__", 1);
             int dl = GeneSpeciesTreeUtil::Instance()->GetDLScore(superTree, speciesTree, lcamap_new);
@@ -198,6 +188,8 @@ string DoSuperGeneTree(string gcontent, string scontent, bool preserveDupSpec, s
             cout<<GeneSpeciesTreeUtil::Instance()->LASTNBDUPS<<","
                 <<GeneSpeciesTreeUtil::Instance()->LASTNBLOSSES<<","
                 <<dl;
+            cout<<result<<endl;
+
         }
 
         delete superTree;

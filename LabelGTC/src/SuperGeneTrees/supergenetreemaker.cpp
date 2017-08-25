@@ -33,7 +33,10 @@ pair<Node*, int> SuperGeneTreeMaker::GetSuperGeneTreeMinDL(vector<Node *> &trees
         cout << NewickLex::ToNewickString(clades_to_preserve[k]) << "\n";
       }
 
+        cout << "clade" << "," << NewickLex::ToNewickString(clades_to_preserve[0]) << "\n";
+        cout << "tree" << ","  << NewickLex::ToNewickString(trees[0]) << "\n";
     */
+
 
         GeneSpeciesTreeUtil::Instance()->LabelInternalNodesUniquely(trees);
         this->intersectionInfo = TreeLabelIntersectionInfo();
