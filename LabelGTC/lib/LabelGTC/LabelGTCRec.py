@@ -88,8 +88,8 @@ class LabelGTC:
         self.logger = logging.getLogger("LabelGTC")
 
         if debug is not None:
-            LabelGTC.set_debug(debug)
-
+            self.logger.setLevel(logging.DEBUG)
+            
     def updateCovSet(self):
         self.covSetEdge_minSGT = [self.genesTree&cse_name for cse_name in self.covSetEdgeName_minSGT]
 
