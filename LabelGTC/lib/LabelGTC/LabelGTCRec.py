@@ -151,6 +151,15 @@ class LabelGTC:
             if not self.checkCovSetTree():
                 raise Exception("The covering set of tree is not conform with the tree of genes")
 
+            else:
+                for g_node in self.genesTree.traverse("levelorder"):
+
+                    #adding the binary feature
+                    if g_node.support >= self.threshold:
+                        if g_node.has_feature("cst") and not g_node.is_leaf():
+                            if g_node.cst == 2 or g_node.cst == 1:
+                                print(g_node.name + "--")
+                                clades_to_preserve_sgt.append(g_node)
 
 
         for g_node in self.genesTree.traverse("levelorder"):
@@ -158,10 +167,6 @@ class LabelGTC:
             #adding the binary feature
             if g_node.support >= self.threshold:
                 g_node.add_features(binconfidence = 1)
-                if g_node.has_feature("cst") and not g_node.is_leaf():
-                    if g_node.cst == 2 or g_node.cst == 1:
-                        print(g_node.name + "--")
-                        clades_to_preserve_sgt.append(g_node)
             else:
                 g_node.add_features(binconfidence = 0)
 
