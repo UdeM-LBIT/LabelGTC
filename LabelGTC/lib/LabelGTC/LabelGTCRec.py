@@ -540,7 +540,7 @@ class LabelGTC:
             if minTRSCompatible and cpt > 2:
                 self.logger.debug("-------> Using minTRS algorithm")
                 special_case = True
-                self.case = "mintrs"
+                self.case = "global"
 
             if minSGTCompatible:
                 self.logger.debug("-------> Using minSGT algorithm")
