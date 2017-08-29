@@ -79,7 +79,7 @@ class LabelGTC:
         #The covering set of edges separated by two sets of 0/1 binconfidence (useful for minSGT calls)
         self.covSetEdge_minSGT = []
 
-        self.isGlobalCase = False
+        self.case = ""
 
         self.logger = logging.getLogger("LabelGTC")
 
@@ -93,8 +93,8 @@ class LabelGTC:
     def getGenesTree(self):
         return self.genesTree
 
-    def getIsGlobalCase(self):
-        return self.isGlobalCase
+    def getCase(self):
+        return self.case
 
 
     def setThreshold(self, newThreshold):
@@ -314,14 +314,25 @@ class LabelGTC:
 
                     #Attaching back the tree to the previous instance genes tree
 
-                    if lgtc.getIsGlobalCase():
+
+                    if lgtc.getCase() == "global":
                         self.logger.debug("CALLING ________________________________________________________________________________________________________________________")
                         self.logger.debug(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
                         self.logger.debug("________________________________________________________________________________________________________________________")
                         modified_tree = lgtc.minSGT()
                         modified_tree.name =  g_node.name
+                        up.add_child(modified_tree)
 
-                    up.add_child(modified_tree)
+                    elif lgtc.getCase() == "polyres":
+                        modified_tree = lgtc.init_polyRes()
+                        modified_tree.name =  g_node.name
+                        up.add_child(modified_tree)
+
+                    elif lgtc.getCase() == "m-polyres":
+                        modified_tree = lgtc.init_m_polyRes()
+                        modified_tree.name =  g_node.name
+                        up.add_child(modified_tree)
+
 
 
         if self.id == 1:
@@ -359,7 +370,11 @@ class LabelGTC:
         self.logger.debug("NBSOLS= %d"%len(r))
         self.logger.debug(r)
 
-        self.logger.debug(TreeClass(str(r[0])))
+        r = TreeClass(str(r[0]))
+
+        return r
+
+
 
 
 
@@ -373,7 +388,9 @@ class LabelGTC:
             if not g_node.is_root() and g_node.cst == 0:
                 g_node.delete()
 
-        self.polyRes()
+        res = self.polyRes()
+
+        return res
 
 
     def init_m_polyRes(self):
@@ -383,7 +400,9 @@ class LabelGTC:
         self.genesTree.contract_tree(self.threshold, 'binconfidence')
         self.logger.debug(self.genesTree)
 
-        self.polyRes()
+        res = self.polyRes()
+
+        return res
 
 
 
@@ -475,7 +494,7 @@ class LabelGTC:
 
         if onlyLeaves:
             self.logger.debug("-------> Using M-PolyRes algorithm")
-            self.isGlobalCase = False
+            self.case = "m-polyres"
             self.init_m_polyRes()
 
         #Testing global case
@@ -513,7 +532,7 @@ class LabelGTC:
 
             if polyResCompatible:
                 self.logger.debug("-------> Using polyRes algorithm")
-                self.isGlobalCase = False
+                self.case = "polyres"
                 global special_case
                 special_case = True
                 self.init_polyRes()
@@ -521,13 +540,13 @@ class LabelGTC:
             if minTRSCompatible and cpt > 2:
                 self.logger.debug("-------> Using minTRS algorithm")
                 special_case = True
-                self.isGlobalCase = False
+                self.case = "mintrs"
 
             if minSGTCompatible:
                 self.logger.debug("-------> Using minSGT algorithm")
-                self.isGlobalCase = False
+                self.case = ""
 
             if not (polyResCompatible or minTRSCompatible or minSGTCompatible):
                 self.logger.debug(" -------> Using globalProcessing")
-                self.isGlobalCase = True
+                self.case = "global"
                 self.globalProcessing()
