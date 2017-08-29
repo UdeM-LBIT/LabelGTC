@@ -30,6 +30,7 @@ from ete3 import Tree
 
 from ..TreeLib import *
 from ..TreeLib import TreeUtils, TreeClass
+import logging
 
 
 
@@ -55,8 +56,7 @@ class LabelGTC:
     lgtc.mergeResolutions()
     """
 
-
-    def __init__(self, speciesTree, genesTree, covSetTree, threshold):
+    def __init__(self, speciesTree, genesTree, covSetTree, threshold, debug=None):
 
         global nbCalls
         nbCalls += 1
@@ -77,13 +77,21 @@ class LabelGTC:
         self.all_leaves = self.genesTree.get_leaf_names()
 
         #The covering set of edges separated by two sets of 0/1 binconfidence (useful for minSGT calls)
+        self.covSetEdgeName_minSGT = []
+
         self.covSetEdge_minSGT = []
 
         self.clades_to_preserve = []
 
         self.isGlobalCase = False
 
+        self.logger = logging.getLogger("LabelGTC")
 
+        if debug is not None:
+            LabelGTC.set_debug(debug)
+
+    def updateCovSet(self):
+        self.covSetEdge_minSGT = [self.genesTree&cse_name for cse_name in self.covSetEdgeName_minSGT]
 
     def getSpeciesTree(self):
         return self.speciesTree
@@ -200,34 +208,34 @@ class LabelGTC:
                 if (child.binconfidence == 1 and child.cst != 1):
                     child.add_features(lcse=1)
                     leaves_to_compare += child.get_leaf_names()
-                    self.covSetEdge_minSGT.append(child)
+                    self.covSetEdgeName_minSGT.append(child.name)
 
                 elif child.cst == 2:
                     child.add_features(lcse=1)
                     leaves_to_compare += child.get_leaf_names()
-                    self.covSetEdge_minSGT.append(child)
+                    self.covSetEdgeName_minSGT.append(child.name)
 
             #Stopping the loop when the larger covering set of edges is found
             if set(self.all_leaves).issubset(set(leaves_to_compare)):
                 break
 
-        print("\n\n\n\n")
-        print("------------------------------------------------------------------")
-        print("------------------------------------------------------------------")
-        print("------------------------------------------------------------------")
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
-        print(self.covSetEdge_minSGT)
-        print("------------------------------------------------------------------")
-        print("------------------------------------------------------------------")
-        print("------------------------------------------------------------------")
-        print("\n\n\n\n")
+        self.logger.debug("\n\n\n\n")
+        self.logger.debug("------------------------------------------------------------------")
+        self.logger.debug("------------------------------------------------------------------")
+        self.logger.debug("------------------------------------------------------------------")
+        self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name", "lcse"]))
+        self.logger.debug(self.covSetEdge_minSGT)
+        self.logger.debug("------------------------------------------------------------------")
+        self.logger.debug("------------------------------------------------------------------")
+        self.logger.debug("------------------------------------------------------------------")
+        self.logger.debug("\n\n\n\n")
 
     def globalProcessing(self):
         """Calling LabelGTC recursively on concerned subtrees of the tree of genes (processing the global case)"""
-
-        print("\n\n")
-        print("************************************************* NEW INSTANCE **********************************************")
-        print("\n\n")
+        self.updateCovSet()
+        self.logger.debug("\n\n")
+        self.logger.debug("************************************************* NEW INSTANCE **********************************************")
+        self.logger.debug("\n\n")
 
         #Computing first the larger covering set of tree
         self.largerCSE()
@@ -251,6 +259,7 @@ class LabelGTC:
                 break
 
             #Testing only the subtrees of the covering set of edges
+            
             if g_node in self.covSetEdge_minSGT and (not g_node.is_root()) and (not g_node.has_feature('root')):
                 sub_leaves += g_node.get_leaf_names()
 
@@ -304,21 +313,22 @@ class LabelGTC:
                     #Attaching back the tree to the previous instance genes tree
 
                     if lgtc.getIsGlobalCase():
-                        print("________________________________________________________________________________________________________________________")
-                        print(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
-                        print("________________________________________________________________________________________________________________________")
+                        self.logger.debug("CALLING ________________________________________________________________________________________________________________________")
+                        self.logger.debug(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
+                        self.logger.debug("________________________________________________________________________________________________________________________")
                         modified_tree = lgtc.minSGT()
+                        modified_tree.name =  g_node.name
 
                     up.add_child(modified_tree)
 
 
         if self.id == 1:
-            print("________________________________________________________________________________________________________________________")
-            print(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
-            print("________________________________________________________________________________________________________________________")
+            self.logger.debug("________________________________________________________________________________________________________________________")
+            self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
+            self.logger.debug("________________________________________________________________________________________________________________________")
             self.minSGT()
             global clades_to_preserve_sgt
-            print(clades_to_preserve_sgt)
+            self.logger.debug(clades_to_preserve_sgt)
             for tree in clades_to_preserve_sgt:
                 print tree
 
@@ -326,7 +336,7 @@ class LabelGTC:
     def polyRes(self):
         """Using PolytomySolver Algorithm"""
 
-        print(self.genesTree)
+        self.logger.debug(self.genesTree)
         dupcost = 1
         losscost = 1
 
@@ -334,9 +344,9 @@ class LabelGTC:
         self.genesTree.set_species()
         self.speciesTree.label_internal_node()
         lcamap = TreeUtils.lcaMapping(self.genesTree, self.speciesTree, multspeciename=False)
-        print(self.speciesTree.write(features=[]))
-        print(type(self.genesTree))
-        print(self.genesTree)
+        self.logger.debug(self.speciesTree.write(features=[]))
+        self.logger.debug(type(self.genesTree))
+        self.logger.debug(self.genesTree)
         for node in self.genesTree.traverse("levelorder"):
             print(node.features)
 
@@ -344,17 +354,17 @@ class LabelGTC:
 
         r = [gts.reconstruct()]
 
-        print "NBSOLS=", len(r)
-        print r
+        self.logger.debug("NBSOLS= %d"%len(r))
+        self.logger.debug(r)
 
-        print(TreeClass(str(r[0])))
+        self.logger.debug(TreeClass(str(r[0])))
 
 
 
     def init_polyRes(self):
         """Initializing PolytomySolver Algorithm"""
 
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
+        self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
 
         #Transforming the genes Tree in a single polytomy
         for g_node in self.genesTree.traverse("levelorder"):
@@ -369,7 +379,7 @@ class LabelGTC:
 
         #Transforming the genes Tree in a multi polytomies tree
         self.genesTree.contract_tree(self.threshold, 'binconfidence')
-        print(self.genesTree)
+        self.logger.debug(self.genesTree)
 
         self.polyRes()
 
@@ -377,7 +387,7 @@ class LabelGTC:
 
     def minSGT(self):
         """Using minSGT algorithm"""
-
+        self.updateCovSet()
         ctp_minSGT = ""
         cst_minSGT = ""
         str_speciesTree = ""
@@ -405,7 +415,7 @@ class LabelGTC:
 
         cst_minSGT2 = res_cst_minSGT[0:len(res_cst_minSGT)-1]
 
-        print(cst_minSGT2)
+        self.logger.debug(cst_minSGT2)
 
         gtreelist = [Tree(x+";") for x in cst_minSGT2.split(';')]
         gcontent = "".join([gt.write(format=9) for gt in gtreelist])
@@ -415,30 +425,30 @@ class LabelGTC:
 
 
 
-        print("STR SPECIES TREE :")
-        print(scontent)
-        print("\n")
-        print("CLADES TO PRESERVE :")
-        print(clades_to_preserve_sgt)
-        print("\n")
-        print("STR CLADES TO PRESERVE :")
-        print(ctp_minSGT2)
-        print("\n")
-        print("GENES TREE :")
-        print(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name"]))
-        print("\n")
-        print("COV SET TREE MINSGT :")
-        print(self.covSetEdge_minSGT)
-        print("\n")
-        print("STR COV SET TREE MINSGT :")
-        print(gcontent)
-        print("\n")
+        self.logger.debug("STR SPECIES TREE :")
+        self.logger.debug(scontent)
+        self.logger.debug("\n")
+        self.logger.debug("CLADES TO PRESERVE :")
+        self.logger.debug(clades_to_preserve_sgt)
+        self.logger.debug("\n")
+        self.logger.debug("STR CLADES TO PRESERVE :")
+        self.logger.debug(ctp_minSGT2)
+        self.logger.debug("\n")
+        self.logger.debug("GENES TREE :")
+        self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name"]))
+        self.logger.debug("\n")
+        self.logger.debug("COV SET TREE MINSGT :")
+        self.logger.debug(self.covSetEdge_minSGT)
+        self.logger.debug("\n")
+        self.logger.debug("STR COV SET TREE MINSGT :")
+        self.logger.debug(gcontent)
+        self.logger.debug("\n")
 
         res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "")
 
         returned_tree = TreeClass(res.strip().split("\n")[-1])
 
-        print(returned_tree)
+        self.logger.debug(returned_tree)
 
         clades_to_preserve_sgt.append(returned_tree)
 
@@ -463,7 +473,7 @@ class LabelGTC:
                 break
 
         if onlyLeaves:
-            print("-------> Using M-PolyRes algorithm")
+            self.logger.debug("-------> Using M-PolyRes algorithm")
             self.isGlobalCase = False
             self.init_m_polyRes()
 
@@ -501,22 +511,22 @@ class LabelGTC:
                         break
 
             if polyResCompatible:
-                print("-------> Using polyRes algorithm")
+                self.logger.debug("-------> Using polyRes algorithm")
                 self.isGlobalCase = False
                 global special_case
                 special_case = True
                 self.init_polyRes()
 
             if minTRSCompatible and cpt > 2:
-                print("-------> Using minTRS algorithm")
+                self.logger.debug("-------> Using minTRS algorithm")
                 special_case = True
                 self.isGlobalCase = False
 
             if minSGTCompatible:
-                print("-------> Using minSGT algorithm")
+                self.logger.debug("-------> Using minSGT algorithm")
                 self.isGlobalCase = False
 
             if not (polyResCompatible or minTRSCompatible or minSGTCompatible):
-                print(" -------> Using globalProcessing")
+                self.logger.debug(" -------> Using globalProcessing")
                 self.isGlobalCase = True
                 self.globalProcessing()

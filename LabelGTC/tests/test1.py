@@ -10,9 +10,17 @@ import time
 from ..lib.TreeLib import *
 from ..lib.TreeLib import TreeUtils, TreeClass
 
+import logging
 
-def main():
-    
+logger = logging.getLogger("LabelGTC")
+ch = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(levelname)s|%(name)s: %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+def main(debug=False):
+    if debug:
+        logger.setLevel(logging.DEBUG)
     tps1 = time.clock()
 
     s = TreeClass("((A,B),C);")
