@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+import argparse
+from lib.TreeLib import TreeUtils, TreeClass, params
+from lib.LabelGTC import LabelGTC
+import sys
+import os
+import time
+import hashlib
+import logging
+import re 
+
+"""
+LabelGTC is ...
+Expected input:
+    - A species tree
+    - A gene tree
+    - A covering set of trees (list of TreeClass trees)
+    - A support for each (non-leaf) node that represents the confidence in the subtree rooted at this node
+    - A threshold value (from 0 to 1) from wich the subtree architecture should be trusted
+
+"""
+geneRemapping = {}
+
+def reformatWithSep(genetree, sep, spos, smap={}):
+    """Change input tree leaves name to follow format used by LabelGTC"""
+
+    if smap:
+        for node in genetree.traverse():
+            node_specie = smap.get(
+                node.name, TreeClass.DEFAULT_SPECIE)
+            if node.name:
+                new_name = node.name.replace('_', '')+ "_" + node_specie
+                if not geneRemapping.get(new_name, None):
+                    geneRemapping[new_name] = node.name
+                node.name = new_name
+    elif sep!='_':
+        for leaf in genetree:
+            node_specie = leaf._extract_feature_name(separator=sep, order=spos)
+            new_name = leaf.name.replace('_', '')+ "_" + node_specie
+            if not geneRemapping.get(new_name, None):
+                geneRemapping[new_name] = leaf.name
+            leaf.name = new_name
+
+class Output(object):
+
+    def __init__(self, file=None):
+        if(file):
+            out = open(file, 'w')
+            self.out = out
+        else:
+            self.out = sys.stdout
+
+    def write(self, line):
+        self.out.write('%s\n' % line)
+
+    def close(self):
+        if self.out is not sys.stdout:
+            self.out.close()
+
+    @staticmethod
+    def error(message):
+        sys.stderr.write("Error: %s\n" % message)
+        sys.exit(1)
+
+
+
+parser = argparse.ArgumentParser(description='LabelGTC is  ...')
+parser.add_argument('-s', '--sptree', dest='specietree', help="Either the filename or the newick string of the species tree.", required=True)
+parser.add_argument('-S', '--sMap', type=argparse.FileType('r'), dest='smap', help="Gene to species map. Use the standard format.")
+parser.add_argument('-g', '--gtree', dest='genetree', help="Either the filename or the newickg of the genetree", required=True)
+parser.add_argument('-o', '--output', dest='outfile', help="Name of your output files with the corrected tree. When batch is specified, each corrected genetree will be printed in the appropriate output file. The genetree is printed on stdout if omitted.")
+parser.add_argument('--sep', dest='gene_sep', default="_", help="Gene-Specie separator for each leaf name in the genetree.")
+parser.add_argument('-c', '--covset', dest='covset', help="Covering set of trees: either a list of trees separated by ';' or a filename ", required=True)
+parser.add_argument('--spos', dest='spos', default="postfix", choices=("prefix", "postfix"), help="The position of the specie name according to the separator. Supported option are prefix and postfix")
+parser.add_argument('--seuil', type=float, dest="seuil", required=True, help="Branch contraction threshold, when the tree is binary. Use only when the tree is binary.")
+parser.add_argument('--cost', type=float, nargs=2, dest='costdl', help="D L : 2 float values, duplication and loss cost in this order")
+parser.add_argument('--debug', action='store_true', dest='debug', help="Debug mode")
+
+args = parser.parse_args()
+
+logger = logging.getLogger("LabelGTC")
+ch = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(levelname)s|%(name)s: %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+if args.debug:
+    logger.setLevel(logging.DEBUG)
+
+sptree, gtree = None, None
+regexmap = {}
+smap = {}
+
+# Get list of species
+try:
+    sptree = TreeClass(args.specietree)
+    gtree = TreeClass(args.genetree)
+except:
+    raise argparse.ArgumentError("Species tree or gene tree format is invalid")
+
+# check covering set validity
+covering_set = []
+try:
+    if os.path.exists(args.covset):
+        with open(args.covset) as COVIN:
+            covering_set = [TreeClass(ct.strip()) for ct in COVIN  if ct.strip()]
+    else:
+        covering_set = [TreeClass(ct+";") for ct in args.covset.split(";") if ct.strip()]
+
+    if not covering_set:
+        raise
+except:
+    raise argparse.ArgumentError("Covering set is invalid")
+
+output = Output(args.outfile)
+
+dup, loss = 1, 1 
+if args.costdl:
+    dup, loss = args.cost
+
+# get smap 
+if args.smap:
+    with open(args.smap, 'rU') if isinstance(args.smap, basestring) else args.smap as INPUT:
+        for line in INPUT:
+            g, s = line.strip().split()
+            if ('*') in g and '.*' not in g:
+                g = g.replace('*', '.*')
+            g_regex = re.compile(g, re.IGNORECASE)
+            regexmap[g_regex] = s
+
+    for leaf in gtree:
+        for key, value in regexmap.iteritems():
+            if key.match(leaf.name):
+                smap[leaf.name] = value
+
+# reformat the name of gtree and set of tree in covset
+for t in [gtree]+covering_set:
+    reformatWithSep(t, args.gene_sep, args.spos, smap)
+
+#print "In tree"
+#print gtree
+#print "Covering Set"
+#for t in covering_set:
+#    print t
+
+# time execution 
+start_time = time.time()
+
+lgtc = LabelGTC(sptree, gtree, covering_set, args.seuil)
+lgtc.mergeResolutions()
+end_time = time.time()
+res = lgtc.getGenesTree()
+for leaf in res:
+    leaf.name = geneRemapping.get(leaf.name, leaf.name)
+
+end_time = time.time()
+
+output.write(res.write(format=9))
+output.close()
+print("\nEND LabelGTC in : '%f'"%(-start_time + end_time))
