@@ -14,3 +14,4 @@
 *.egg-info/
 .installed.cfg
 *.egg
+LabelGTC/labelgtc
