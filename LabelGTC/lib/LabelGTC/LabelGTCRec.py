@@ -541,10 +541,12 @@ class LabelGTC:
                 self.logger.debug("-------> Using minTRS algorithm")
                 special_case = True
                 self.case = "global"
+                self.globalProcessing()
 
             if minSGTCompatible:
                 self.logger.debug("-------> Using minSGT algorithm")
-                self.case = ""
+                self.case = "global"
+                self.globalProcessing()
 
             if not (polyResCompatible or minTRSCompatible or minSGTCompatible):
                 self.logger.debug(" -------> Using globalProcessing")

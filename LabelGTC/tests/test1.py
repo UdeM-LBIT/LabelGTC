@@ -46,7 +46,7 @@ def main(debug=True):
 
 
 
-    g = TreeClass("((((a_A,x_B)0.2,(b_B,e_C)0.9)0.8,y_C)0.2,((i_B,k_A)0.1,((c_C, j_A)0.9,(d_B,(g_C,h_A)0.8)0.8)0.9)0.2)0.2;")
+    g = TreeClass("((((a_A,x_B)0.2,(b_B,e_C)0.9)0.8,y_C)0.2,((i_B,k_A)0.1,((c_C, j_A)0.2,(d_B,(g_C,h_A)0.2)0.2)0.9)0.2)0.2;")
 
     cst = [TreeClass("y_C;"), TreeClass("((b_B,e_C),(a_A,x_B));"), TreeClass("(c_C,j_A);"), TreeClass("((g_C,h_A),d_B);"), TreeClass("(i_B,k_A);")]
 
