@@ -79,9 +79,7 @@ class LabelGTC:
         #The covering set of edges separated by two sets of 0/1 binconfidence (useful for minSGT calls)
         self.covSetEdge_minSGT = []
 
-        self.clades_to_preserve = []
-
-        self.isGlobalCase = False
+        self.case = ""
 
         self.logger = logging.getLogger("LabelGTC")
 
@@ -95,8 +93,8 @@ class LabelGTC:
     def getGenesTree(self):
         return self.genesTree
 
-    def getIsGlobalCase(self):
-        return self.isGlobalCase
+    def getCase(self):
+        return self.case
 
 
     def setThreshold(self, newThreshold):
@@ -146,10 +144,22 @@ class LabelGTC:
     def binaryLabeling(self):
         """Binarization of the support for each node according to the threshold"""
 
+        global clades_to_preserve_sgt
+
         if self.id == 1:
         #checking if the covering set of tree is conform with the tree of genes
             if not self.checkCovSetTree():
                 raise Exception("The covering set of tree is not conform with the tree of genes")
+
+            else:
+                for g_node in self.genesTree.traverse("levelorder"):
+
+                    #adding the binary feature
+                    if g_node.support >= self.threshold:
+                        if g_node.has_feature("cst") and not g_node.is_leaf():
+                            if g_node.cst == 2 or g_node.cst == 1:
+                                print(g_node.name + "--")
+                                clades_to_preserve_sgt.append(g_node)
 
 
         for g_node in self.genesTree.traverse("levelorder"):
@@ -157,8 +167,6 @@ class LabelGTC:
             #adding the binary feature
             if g_node.support >= self.threshold:
                 g_node.add_features(binconfidence = 1)
-                if not g_node.is_leaf() and not g_node.has_feature("root") and not g_node.is_root():
-                    self.clades_to_preserve.append(g_node)
             else:
                 g_node.add_features(binconfidence = 0)
 
@@ -253,7 +261,7 @@ class LabelGTC:
                 break
 
             #Testing only the subtrees of the covering set of edges
-            
+
             if g_node in true_covSetEdge_minSGT and (not g_node.is_root()) and (not g_node.has_feature('root')):
                 sub_leaves += g_node.get_leaf_names()
 
@@ -306,14 +314,25 @@ class LabelGTC:
 
                     #Attaching back the tree to the previous instance genes tree
 
-                    if lgtc.getIsGlobalCase():
+
+                    if lgtc.getCase() == "global":
                         self.logger.debug("CALLING ________________________________________________________________________________________________________________________")
                         self.logger.debug(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
                         self.logger.debug("________________________________________________________________________________________________________________________")
                         modified_tree = lgtc.minSGT()
                         modified_tree.name =  g_node.name
+                        up.add_child(modified_tree)
 
-                    up.add_child(modified_tree)
+                    elif lgtc.getCase() == "polyres":
+                        modified_tree = lgtc.init_polyRes()
+                        modified_tree.name =  g_node.name
+                        up.add_child(modified_tree)
+
+                    elif lgtc.getCase() == "m-polyres":
+                        modified_tree = lgtc.init_m_polyRes()
+                        modified_tree.name =  g_node.name
+                        up.add_child(modified_tree)
+
 
 
         if self.id == 1:
@@ -351,7 +370,11 @@ class LabelGTC:
         self.logger.debug("NBSOLS= %d"%len(r))
         self.logger.debug(r)
 
-        self.logger.debug(TreeClass(str(r[0])))
+        r = TreeClass(str(r[0]))
+
+        return r
+
+
 
 
 
@@ -365,7 +388,9 @@ class LabelGTC:
             if not g_node.is_root() and g_node.cst == 0:
                 g_node.delete()
 
-        self.polyRes()
+        res = self.polyRes()
+
+        return res
 
 
     def init_m_polyRes(self):
@@ -375,7 +400,9 @@ class LabelGTC:
         self.genesTree.contract_tree(self.threshold, 'binconfidence')
         self.logger.debug(self.genesTree)
 
-        self.polyRes()
+        res = self.polyRes()
+
+        return res
 
 
 
@@ -467,7 +494,7 @@ class LabelGTC:
 
         if onlyLeaves:
             self.logger.debug("-------> Using M-PolyRes algorithm")
-            self.isGlobalCase = False
+            self.case = "m-polyres"
             self.init_m_polyRes()
 
         #Testing global case
@@ -505,7 +532,7 @@ class LabelGTC:
 
             if polyResCompatible:
                 self.logger.debug("-------> Using polyRes algorithm")
-                self.isGlobalCase = False
+                self.case = "polyres"
                 global special_case
                 special_case = True
                 self.init_polyRes()
@@ -513,13 +540,13 @@ class LabelGTC:
             if minTRSCompatible and cpt > 2:
                 self.logger.debug("-------> Using minTRS algorithm")
                 special_case = True
-                self.isGlobalCase = False
+                self.case = "mintrs"
 
             if minSGTCompatible:
                 self.logger.debug("-------> Using minSGT algorithm")
-                self.isGlobalCase = False
+                self.case = ""
 
             if not (polyResCompatible or minTRSCompatible or minSGTCompatible):
                 self.logger.debug(" -------> Using globalProcessing")
-                self.isGlobalCase = True
+                self.case = "global"
                 self.globalProcessing()
