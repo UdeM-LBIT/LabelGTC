@@ -83,6 +83,8 @@ class LabelGTC:
 
         self.logger = logging.getLogger("LabelGTC")
 
+        self.resultedTree = None
+
         if debug is not None:
             self.logger.setLevel(logging.DEBUG)
 
@@ -95,6 +97,9 @@ class LabelGTC:
 
     def getCase(self):
         return self.case
+
+    def getResultedTree(self):
+        return self.resultedTree
 
 
     def setThreshold(self, newThreshold):
@@ -339,11 +344,12 @@ class LabelGTC:
             self.logger.debug("________________________________________________________________________________________________________________________")
             self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
             self.logger.debug("________________________________________________________________________________________________________________________")
-            self.minSGT()
+            self.resultedTree = self.minSGT()
             global clades_to_preserve_sgt
             self.logger.debug(clades_to_preserve_sgt)
             for tree in clades_to_preserve_sgt:
                 self.logger.debug(tree)
+
 
 
     def polyRes(self):
@@ -442,9 +448,6 @@ class LabelGTC:
 
         scontent = self.speciesTree.write(format=9).strip(';')
 
-
-
-
         self.logger.debug("STR SPECIES TREE :")
         self.logger.debug(scontent)
         self.logger.debug("\n")
@@ -466,13 +469,17 @@ class LabelGTC:
 
         res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "")
 
-        returned_tree = TreeClass(res.strip().split("\n")[-1])
+        res2 = res.replace("__","_")
+
+        returned_tree = TreeClass(res2.strip().split("\n")[-1])
 
         self.logger.debug(returned_tree)
 
         clades_to_preserve_sgt.append(returned_tree)
 
         return returned_tree
+
+
 
     def mergeResolutions(self):
         """Using the different kind of resulutions according to the labelling of the tree of genes"""

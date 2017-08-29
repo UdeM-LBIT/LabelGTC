@@ -7,7 +7,7 @@ import os
 import time
 import hashlib
 import logging
-import re 
+import re
 
 """
 LabelGTC is ...
@@ -113,11 +113,11 @@ except:
 
 output = Output(args.outfile)
 
-dup, loss = 1, 1 
+dup, loss = 1, 1
 if args.costdl:
     dup, loss = args.cost
 
-# get smap 
+# get smap
 if args.smap:
     with open(args.smap, 'rU') if isinstance(args.smap, basestring) else args.smap as INPUT:
         for line in INPUT:
@@ -142,13 +142,13 @@ for t in [gtree]+covering_set:
 #for t in covering_set:
 #    print t
 
-# time execution 
+# time execution
 start_time = time.time()
 
 lgtc = LabelGTC(sptree, gtree, covering_set, args.seuil)
 lgtc.mergeResolutions()
 end_time = time.time()
-res = lgtc.getGenesTree()
+res = lgtc.getResultedTree()
 for leaf in res:
     leaf.name = geneRemapping.get(leaf.name, leaf.name)
 
