@@ -79,8 +79,6 @@ class LabelGTC:
         #The covering set of edges separated by two sets of 0/1 binconfidence (useful for minSGT calls)
         self.covSetEdge_minSGT = []
 
-        self.clades_to_preserve = []
-
         self.isGlobalCase = False
 
         self.logger = logging.getLogger("LabelGTC")
@@ -146,10 +144,13 @@ class LabelGTC:
     def binaryLabeling(self):
         """Binarization of the support for each node according to the threshold"""
 
+        global clades_to_preserve_sgt
+
         if self.id == 1:
         #checking if the covering set of tree is conform with the tree of genes
             if not self.checkCovSetTree():
                 raise Exception("The covering set of tree is not conform with the tree of genes")
+
 
 
         for g_node in self.genesTree.traverse("levelorder"):
@@ -157,8 +158,10 @@ class LabelGTC:
             #adding the binary feature
             if g_node.support >= self.threshold:
                 g_node.add_features(binconfidence = 1)
-                if not g_node.is_leaf() and not g_node.has_feature("root") and not g_node.is_root():
-                    self.clades_to_preserve.append(g_node)
+                if g_node.has_feature("cst") and not g_node.is_leaf():
+                    if g_node.cst == 2:
+                        print(g_node.name + "--")
+                        clades_to_preserve_sgt.append(g_node)
             else:
                 g_node.add_features(binconfidence = 0)
 
@@ -253,7 +256,7 @@ class LabelGTC:
                 break
 
             #Testing only the subtrees of the covering set of edges
-            
+
             if g_node in true_covSetEdge_minSGT and (not g_node.is_root()) and (not g_node.has_feature('root')):
                 sub_leaves += g_node.get_leaf_names()
 
