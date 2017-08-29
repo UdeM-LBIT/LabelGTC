@@ -18,7 +18,7 @@ formatter = logging.Formatter('%(levelname)s|%(name)s: %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-def main(debug=False):
+def main(debug=True):
     if debug:
         logger.setLevel(logging.DEBUG)
     tps1 = time.clock()

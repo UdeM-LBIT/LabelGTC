@@ -77,8 +77,6 @@ class LabelGTC:
         self.all_leaves = self.genesTree.get_leaf_names()
 
         #The covering set of edges separated by two sets of 0/1 binconfidence (useful for minSGT calls)
-        self.covSetEdgeName_minSGT = []
-
         self.covSetEdge_minSGT = []
 
         self.clades_to_preserve = []
@@ -89,9 +87,6 @@ class LabelGTC:
 
         if debug is not None:
             self.logger.setLevel(logging.DEBUG)
-            
-    def updateCovSet(self):
-        self.covSetEdge_minSGT = [self.genesTree&cse_name for cse_name in self.covSetEdgeName_minSGT]
 
     def getSpeciesTree(self):
         return self.speciesTree
@@ -208,12 +203,12 @@ class LabelGTC:
                 if (child.binconfidence == 1 and child.cst != 1):
                     child.add_features(lcse=1)
                     leaves_to_compare += child.get_leaf_names()
-                    self.covSetEdgeName_minSGT.append(child.name)
+                    self.covSetEdge_minSGT.append(child.name)
 
                 elif child.cst == 2:
                     child.add_features(lcse=1)
                     leaves_to_compare += child.get_leaf_names()
-                    self.covSetEdgeName_minSGT.append(child.name)
+                    self.covSetEdge_minSGT.append(child.name)
 
             #Stopping the loop when the larger covering set of edges is found
             if set(self.all_leaves).issubset(set(leaves_to_compare)):
@@ -232,7 +227,6 @@ class LabelGTC:
 
     def globalProcessing(self):
         """Calling LabelGTC recursively on concerned subtrees of the tree of genes (processing the global case)"""
-        self.updateCovSet()
         self.logger.debug("\n\n")
         self.logger.debug("************************************************* NEW INSTANCE **********************************************")
         self.logger.debug("\n\n")
@@ -249,7 +243,7 @@ class LabelGTC:
 
         cpt = 0
         cpt_bis = 0
-
+        true_covSetEdge_minSGT = [self.genesTree&csename for csename in self.covSetEdge_minSGT]
         #Applying recursively the LabelGTC algorithm
         for g_node in self.genesTree.traverse("levelorder"):
 
@@ -260,7 +254,7 @@ class LabelGTC:
 
             #Testing only the subtrees of the covering set of edges
             
-            if g_node in self.covSetEdge_minSGT and (not g_node.is_root()) and (not g_node.has_feature('root')):
+            if g_node in true_covSetEdge_minSGT and (not g_node.is_root()) and (not g_node.has_feature('root')):
                 sub_leaves += g_node.get_leaf_names()
 
                 #Testing if the tree to treat is big enough (more than 1 internal node)
@@ -330,7 +324,7 @@ class LabelGTC:
             global clades_to_preserve_sgt
             self.logger.debug(clades_to_preserve_sgt)
             for tree in clades_to_preserve_sgt:
-                print tree
+                self.logger.debug(tree)
 
 
     def polyRes(self):
@@ -348,7 +342,7 @@ class LabelGTC:
         self.logger.debug(type(self.genesTree))
         self.logger.debug(self.genesTree)
         for node in self.genesTree.traverse("levelorder"):
-            print(node.features)
+            self.logger.debug(node.features)
 
         gts = ZhengPS.DynPolySolver(self.genesTree, self.speciesTree, lcamap, dupcost, losscost)
 
@@ -387,7 +381,6 @@ class LabelGTC:
 
     def minSGT(self):
         """Using minSGT algorithm"""
-        self.updateCovSet()
         ctp_minSGT = ""
         cst_minSGT = ""
         str_speciesTree = ""
@@ -406,7 +399,7 @@ class LabelGTC:
 
         ctp_minSGT2 = ctp_minSGT.replace("____", "__")
 
-        for tree in self.covSetEdge_minSGT:
+        for tree in [self.genesTree&csename for csename in self.covSetEdge_minSGT]:
             strTree = tree.write()
             newStrTree = strTree.replace("_", "__")
             cst_minSGT += newStrTree
