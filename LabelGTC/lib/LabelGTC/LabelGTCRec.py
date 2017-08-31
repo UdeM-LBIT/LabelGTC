@@ -163,7 +163,6 @@ class LabelGTC:
                     if g_node.support >= self.threshold:
                         if g_node.has_feature("cst") and not g_node.is_leaf():
                             if g_node.cst == 2 or g_node.cst == 1:
-                                print(g_node.name + "--")
                                 clades_to_preserve_sgt.append(g_node)
 
 

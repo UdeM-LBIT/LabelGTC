@@ -80,7 +80,7 @@ def main(debug=True):
     print("**********************************************************************************")
     print("\n\n\n\n")
 
-    print(lgtc.getResultedTree())
+    print(lgtc.getResultedTree)
 
     tps2 = time.clock()
     print("Time to compute:")
