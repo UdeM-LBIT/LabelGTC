@@ -1,16 +1,17 @@
 #!/usr/bin/env python
+
 import argparse
-from lib.TreeLib import TreeUtils, TreeClass, params
-from lib.LabelGTC import LabelGTC
 import sys
 import os
 import time
-import hashlib
 import logging
 import re
+from lib.TreeLib import TreeUtils, TreeClass, params
+from lib.LabelGTC import LabelGTC
 
 """
-LabelGTC is ...
+LabelGTC is an implementation of the general framework for genetree
+correction under a DL model (Ouangraoua and El-Mabrouk, 2016)
 Expected input:
     - A species tree
     - A gene tree
@@ -20,6 +21,8 @@ Expected input:
 
 """
 geneRemapping = {}
+VERSION = "1.0.1rc" # to update at each release
+
 
 def reformatWithSep(genetree, sep, spos, smap={}):
     """Change input tree leaves name to follow format used by LabelGTC"""
@@ -64,7 +67,7 @@ class Output(object):
 
 
 
-parser = argparse.ArgumentParser(description='LabelGTC is  ...')
+parser = argparse.ArgumentParser(description='LabelGTC v%s'%VERSION)
 parser.add_argument('-s', '--sptree', dest='specietree', help="Either the filename or the newick string of the species tree.", required=True)
 parser.add_argument('-S', '--sMap', type=argparse.FileType('r'), dest='smap', help="Gene to species map. Use the standard format.")
 parser.add_argument('-g', '--gtree', dest='genetree', help="Either the filename or the newickg of the genetree", required=True)
@@ -73,7 +76,7 @@ parser.add_argument('--sep', dest='gene_sep', default="_", help="Gene-Specie sep
 parser.add_argument('-c', '--covset', dest='covset', help="Covering set of trees: either a list of trees separated by ';' or a filename ", required=True)
 parser.add_argument('--spos', dest='spos', default="postfix", choices=("prefix", "postfix"), help="The position of the specie name according to the separator. Supported option are prefix and postfix")
 parser.add_argument('--seuil', type=float, dest="seuil", required=True, help="Branch contraction threshold, when the tree is binary. Use only when the tree is binary.")
-parser.add_argument('--cost', type=float, nargs=2, dest='costdl', help="D L : 2 float values, duplication and loss cost in this order")
+parser.add_argument('--cost', type=float, nargs=2, dest='costdl', help="Not implemented yet | D L : 2 float values, duplication and loss cost in this order")
 parser.add_argument('--debug', action='store_true', dest='debug', help="Debug mode")
 
 args = parser.parse_args()
