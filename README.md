@@ -1,6 +1,7 @@
 ## LabelGTC
-Implementation of the LabelGTC algorithm, a general framework for genetree correction under a duplication and loss model. 
-The algorithm has been described here 
+This is the implementation of the LabelGTC algorithm, a general framework for genetree correction under a duplication and loss model. 
+
+The algorithm has been described here:
 
     El-Mabrouk, N., & Ouangraoua, A. (2017). A General Framework for Gene Tree Correction Based on Duplication-Loss Reconciliation (Version 1.0). (M. Herbstritt, Ed.). Schloss Dagstuhl - Leibniz-Zentrum fuer Informatik GmbH, Wadern/Saarbruecken, Germany. https://doi.org/10.4230/lipics.wabi.2017.8
 
