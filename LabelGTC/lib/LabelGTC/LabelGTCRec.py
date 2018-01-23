@@ -385,15 +385,13 @@ class LabelGTC:
 
         #Solving the tree
         gts = ZhengPS.DynPolySolver(self.genesTree, self.speciesTree, lcamap, dupcost, losscost)
-
         r = [gts.reconstruct()]
 
-        self.logger.debug("NBSOLS= %d"%len(r))
+        self.logger.debug("NBSOLS = %d"%len(r))
         self.logger.debug(r)
 
         #Reconstructing the result as a TreeClass object
         r = TreeClass(str(r[0]))
-
         return r
 
 
@@ -424,7 +422,6 @@ class LabelGTC:
 
         #Calling polyRes
         res = self.polyRes()
-
         return res
 
 
@@ -461,6 +458,9 @@ class LabelGTC:
         ctp_minSGT2 = ctp_minSGT.replace("____", "__")
 
         #Formating the covering set of trees for the minSGT call
+        self.logger.debug("-----------------",[csename for csename in self.covSetEdge_minSGT])
+        self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=['name']))
+        self.logger.debug('#####################')
         for tree in [self.genesTree&csename for csename in self.covSetEdge_minSGT]:
 
             strTree = tree.write()
@@ -518,10 +518,10 @@ class LabelGTC:
 
 
     def mergeResolutions(self):
-        """Using the different kind of resulutions according to the labelling of the tree of genes
-        - M-PolyRes if the covering set of trees is the leafset of the genesTree
-        - PolyRes if all terminal edges are labelled 1 and all non-terminal edges are labelled 0
-        - MinTRS if all terminal edges are labelled 0 and all non-terminal are labelled 1 (not implemented yet, considered as a global case)
+        """Using the different kind of resolutions according to the labeling of the gene trees
+        - M-PolyRes if the covering set of trees is the leafset of the geneTrees
+        - PolyRes if all terminal edges are labeled 1 and all non-terminal edges are labelled 0
+        - MinTRS if all terminal edges are labeled 0 and all non-terminal are labelled 1 (not implemented yet, considered as a global case)
         - Global case otherwise
         """
 
@@ -547,7 +547,7 @@ class LabelGTC:
             self.case = "m-polyres"
 
             #Using M-PolyRes to resolve the tree
-            self.init_m_polyRes()
+            self.resultedTree = self.init_m_polyRes()
 
         #Testing other cases
         else:
@@ -595,7 +595,7 @@ class LabelGTC:
                 self.case = "polyres"
 
                 #Using polyRes to resolve the tree
-                self.init_polyRes()
+                self.resultedTree = self.init_polyRes()
 
             #MinTRS case detected
             if minTRSCompatible and cpt > 2:
@@ -606,7 +606,7 @@ class LabelGTC:
                 self.case = "global"
 
                 #Referring to the global case as minTRS resolution is not implemented
-                self.globalProcessing()
+                self.resultedTree = self.globalProcessing()
 
             #MinSGT case detected, considered as a global case
             if minSGTCompatible:
@@ -615,7 +615,7 @@ class LabelGTC:
                 self.case = "global"
 
                 #Using the global case processing to resolve the tree
-                self.globalProcessing()
+                self.resultedTree = self.globalProcessing()
 
             #No special case detected
             if not (polyResCompatible or minTRSCompatible or minSGTCompatible):
@@ -624,4 +624,4 @@ class LabelGTC:
                 self.case = "global"
 
                 #Using the global case processing to resolve the tree
-                self.globalProcessing()
+                self.resultedTree = self.globalProcessing()

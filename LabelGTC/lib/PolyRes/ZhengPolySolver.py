@@ -100,6 +100,7 @@ class Solver(object):
         return W, rW
 
     def reconstruct(self):
+
         images_trees = TreeUtils.getImageTreeNode(
             self.genetree, self.specietree, self.lcamap)
 

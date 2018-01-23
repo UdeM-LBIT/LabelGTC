@@ -851,7 +851,6 @@ def getImageTreeNode(genetree, specietree, lcamap):
         for gnode in reversedmap[snode]:
             p_gnode = gnode.up
             if(p_gnode):
-                print(p_gnode)
                 gnode_ind = [x for x in xrange(len(p_gnode.children)) if p_gnode.children[
                     x] == gnode][0]
                 p_gnode.children[gnode_ind], p_gnode.children[

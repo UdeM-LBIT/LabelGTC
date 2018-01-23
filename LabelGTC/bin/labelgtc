@@ -150,7 +150,6 @@ start_time = time.time()
 
 lgtc = LabelGTC(sptree, gtree, covering_set, args.seuil)
 lgtc.mergeResolutions()
-end_time = time.time()
 res = lgtc.getResultedTree()
 for leaf in res:
     leaf.name = geneRemapping.get(leaf.name, leaf.name)
