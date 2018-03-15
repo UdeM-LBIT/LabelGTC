@@ -440,13 +440,17 @@ class LabelGTC:
 
         #Removing clades to preserve that are subtrees of the others
         global clades_to_preserve_sgt
+        clades_to_remove=set([])
+
         for clade1 in clades_to_preserve_sgt:
-
             for clade2 in clades_to_preserve_sgt:
-
                 if clade1 != clade2:
                     if set(clade1.get_leaf_names()).issubset(set(clade2.get_leaf_names())):
-                        clades_to_preserve_sgt.remove(clade1)
+            
+                        clades_to_remove.update(clade1)
+
+        for ctr_ in clades_to_remove:
+            clades_to_preserve_sgt.remove(ctr_)
 
         #Formating the clades to preserve for the minSGT call
         for tree in clades_to_preserve_sgt:
