@@ -105,7 +105,11 @@ covering_set = []
 try:
     if os.path.exists(args.covset):
         with open(args.covset) as COVIN:
-            covering_set = [TreeClass(ct.strip()) for ct in COVIN  if ct.strip()]
+            covering_set = []
+            for ct in COVIN:
+                ct = ct.strip().split(';')
+                if ct:
+                    covering_set.extend([TreeClass(ctt.strip()+';') for ctt in ct if ctt.strip()])
     else:
         covering_set = [TreeClass(ct+";") for ct in args.covset.split(";") if ct.strip()]
 
