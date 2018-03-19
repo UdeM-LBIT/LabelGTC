@@ -14,7 +14,7 @@
 
 using namespace std;
 
-string DoSuperGeneTree(string gcontent, string scontent, bool preserveDupSpec, string clades_to_preserve, string treated_trees, string outputmode="");
+string DoSuperGeneTree(string gcontent, string scontent, bool preserveDupSpec, string clades_to_preserve, string treated_trees, string outputmode="", int limit=1);
 string DoSubtreeCorrection(string gcontent, string scontent, bool preserveDupSpec, string markedNodesMode = "", string outputmode = "tree");
 
 string DoSGTOnHighSpecs(string gcontent, string scontent, string clades_to_preserve, string treated_trees, bool preserveDupSpec, int maxNBLeaves = 999999, int maxNBSubtrees = 999999);
