@@ -584,8 +584,6 @@ class GeneTreeSolver:
                                     # limit -= 1
 
                         # limit = max(limit, 1)
-                        print(gchild)
-                        print(r2)
                         r = r2
 
                 if len(r) > limit:
