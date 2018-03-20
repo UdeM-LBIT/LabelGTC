@@ -38,6 +38,9 @@ special_case = False
 #Number of instance created
 nbCalls = 0
 
+# Maximum number of solutions
+MAX_SOL = None
+
 #Clades to be preserved during minSGT call
 global clades_to_preserve_sgt
 clades_to_preserve_sgt = []
@@ -59,10 +62,14 @@ class LabelGTC:
     lgtc.mergeResolutions()
     """
 
-    def __init__(self, speciesTree, genesTree, covSetTree, threshold, debug=None):
+    def __init__(self, speciesTree, genesTree, covSetTree, threshold, debug=None, limit=None):
 
         global nbCalls
         nbCalls += 1
+
+        global MAX_SOL
+        if MAX_SOL is None and isinstance(limit, int) and limit > 0:
+            MAX_SOL = limit
 
         self.id = nbCalls
 
@@ -386,7 +393,7 @@ class LabelGTC:
 
         self.logger.debug("NBSOLS = %d"%len(r))
         self.logger.debug(r)
-
+        print r, self.id
         #Reconstructing the result as a TreeClass object
         r = TreeClass(str(r[0]))
         return r
@@ -404,6 +411,7 @@ class LabelGTC:
                 g_node.delete()
 
         #Calling polyRes
+        print 'init'
         self.resultedTree = self.polyRes()
         return self.resultedTree
 
@@ -417,6 +425,8 @@ class LabelGTC:
         self.logger.debug(self.genesTree)
 
         #Calling polyRes
+        print 'init mpoly'
+
         self.resultedTree = self.polyRes()
         return self.resultedTree
 
@@ -498,7 +508,7 @@ class LabelGTC:
         self.logger.debug("\n")
 
         #MinSGT call
-        res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "")
+        res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "", limit=20)
 
         #Reformating the resulted tree
         res2 = res.replace("__","_")
@@ -592,6 +602,7 @@ class LabelGTC:
                 self.case = "polyres"
 
                 #Using polyRes to resolve the tree
+                print 'going in polyres'
                 self.resultedTree = self.init_polyRes()
 
             #MinTRS case detected

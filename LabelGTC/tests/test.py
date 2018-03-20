@@ -16,10 +16,13 @@ treated_trees = "((C1__C, A1__A),(B1__B, (C2__C,D2__D)));((B1__B, (C2__C,D2__D))
 gcontent = "".join([gt.write(format=9) for gt in gtreelist])
 scontent = sptree.write(format=9).strip(';')
 
+print "Test with multiple solutions ", 
+print '------------------------------------------------------'
+print getMinSGT(gcontent, scontent, True, "", "", "", 10)
 print "Test with clade to preserve: ", clades_to_preserve
 print '------------------------------------------------------'
-print getMinSGT(gcontent, scontent, True, clades_to_preserve, treated_trees, "")
+print getMinSGT(gcontent, scontent, True, clades_to_preserve, treated_trees, "", 10)
 print "\nTest without clade to preserve"
 print '------------------------------------------------------'
 
-print getMinSGT(gcontent, scontent, True, "", treated_trees, "")
+print getMinSGT(gcontent, scontent, True, "", treated_trees, "", 10)

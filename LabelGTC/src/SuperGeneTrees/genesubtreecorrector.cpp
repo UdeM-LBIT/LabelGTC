@@ -36,15 +36,15 @@ Node* GeneSubtreeCorrector::minTRS_Rec(Node* geneTree, Node* speciesTree, unorde
         subtrees_lca_mapping.push_back(lca_mapping);
         subtrees_lca_mapping.push_back(lca_mapping);
 
-
+        // Modified by EN
         SuperGeneTreeMaker supermaker;
+        vector<Node *> clades_to_preserve ;
+        vector<Node *> treated_trees ;
+        // This supposes that the default limit is 1
+        // I offer no garanti that resList is not empty
+        vector<pair<Node*, int>> resList =  supermaker.GetSuperGeneTreeMinDL(subtrees, clades_to_preserve, treated_trees, subtrees_lca_mapping, speciesTree, mustRetainDupSpec);
 
-        vector<Node *> clades_to_preserve = {};
-        vector<Node *> treated_trees = {};
-
-        pair<Node*, int> res = supermaker.GetSuperGeneTreeMinDL(subtrees, clades_to_preserve, treated_trees, subtrees_lca_mapping, speciesTree, mustRetainDupSpec);
-
-
+        pair<Node*, int> res = resList.front();
         Node* newsubtree = res.first;
 
         lca_mapping[newsubtree] = lca_mapping[geneTree];
