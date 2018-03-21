@@ -46,6 +46,9 @@ A binary `labelgtc` is provided. Help can be obtained with ```labelgtc --help```
                             Use only when the tree is binary.
       --cost COSTDL COSTDL  Not implemented yet | D L : 2 float values,
                             duplication and loss cost in this order
+      -l LIMIT, --lim LIMIT
+                            Maximum number of solutions (default 1)
+
       --debug               Debug mode
     
 
