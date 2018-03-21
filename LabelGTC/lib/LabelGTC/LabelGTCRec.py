@@ -326,9 +326,9 @@ class LabelGTC:
                     elif lgtc.getCase() == "polyres":
 
                         if lgtc.resultedTree:
-                            modified_trees = lgtc.getResultedTree()
+                            modified_tree = lgtc.getResultedTree()
                         else:
-                            modified_trees = lgtc.init_polyRes()
+                            modified_tree = lgtc.init_polyRes()
                         modified_tree.name =  g_node_name
                         #Attaching back the subtree to the current genesTree
                         up.add_child(modified_tree)
