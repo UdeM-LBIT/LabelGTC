@@ -253,6 +253,8 @@ class LabelGTC:
         sub_leaves = []
 
         true_covSetEdge_minSGT = [self.genesTree&csename for csename in self.covSetEdge_minSGT]
+        print true_covSetEdge_minSGT
+        print self.genesTree.get_ascii(show_internal=True)
 
         #Applying recursively the LabelGTC algorithm
         for g_node in self.genesTree.traverse("levelorder"):
@@ -302,6 +304,7 @@ class LabelGTC:
                     #The new genes tree of the next instance
                     g_node.detach()
 
+                    g_node_name = g_node.name
                     #New instance with the current subtree and the reduced covering set of tree (limited to the subtree)
                     lgtc = LabelGTC(self.speciesTree, g_node, cst_subtree, self.threshold)
 
@@ -318,7 +321,7 @@ class LabelGTC:
                         #Using minSGT to resolve the subtree
                         modified_tree = lgtc.minSGT()
 
-                        modified_tree.name =  g_node.name
+                        modified_tree.name = g_node_name
 
                         #Attaching back the subtree to the current genesTree
                         up.add_child(modified_tree)
@@ -328,7 +331,7 @@ class LabelGTC:
                         #Using polyRes to resolve the subtree
                         modified_tree = lgtc.init_polyRes()
 
-                        modified_tree.name =  g_node.name
+                        modified_tree.name =  g_node_name
 
                         #Attaching back the subtree to the current genesTree
                         up.add_child(modified_tree)
@@ -339,10 +342,12 @@ class LabelGTC:
                         #Using MPolyRes to resolve the subtree
                         modified_tree = lgtc.init_m_polyRes()
 
-                        modified_tree.name =  g_node.name
+                        modified_tree.name = g_node_name
 
                         #Attaching back the subtree to the current genesTree
                         up.add_child(modified_tree)
+
+                    g_node.name = g_node_name
 
         #On first instance
         if self.id == 1:
@@ -458,6 +463,8 @@ class LabelGTC:
         self.logger.debug("-----------------\n"+" ".join([csename for csename in self.covSetEdge_minSGT]))
         self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=['name']))
         self.logger.debug('#####################')
+        print self.covSetEdge_minSGT
+        print self.genesTree.get_ascii(show_internal=True)
         for tree in [self.genesTree&csename for csename in self.covSetEdge_minSGT]:
 
             strTree = tree.write()
