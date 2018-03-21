@@ -321,20 +321,13 @@ class LabelGTC:
                         #Using minSGT to resolve the subtree
                         modified_tree = lgtc.minSGT()
 
-                        modified_tree.name = g_node_name
-
-                        #Attaching back the subtree to the current genesTree
-                        up.add_child(modified_tree)
-
                     #PolyRes case detected
                     elif lgtc.getCase() == "polyres":
-                        #Using polyRes to resolve the subtree
-                        modified_tree = lgtc.init_polyRes()
 
-                        modified_tree.name =  g_node_name
-
-                        #Attaching back the subtree to the current genesTree
-                        up.add_child(modified_tree)
+                        if lgtc.resultedTree:
+                            modified_trees = lgtc.getResultedTree()
+                        else:
+                            modified_trees = lgtc.init_polyRes()
 
                     #Multi PolyRes case detected
                     elif lgtc.getCase() == "m-polyres":
@@ -342,10 +335,11 @@ class LabelGTC:
                         #Using MPolyRes to resolve the subtree
                         modified_tree = lgtc.init_m_polyRes()
 
-                        modified_tree.name = g_node_name
 
-                        #Attaching back the subtree to the current genesTree
-                        up.add_child(modified_tree)
+                    modified_tree.name =  g_node_name
+
+                    #Attaching back the subtree to the current genesTree
+                    up.add_child(modified_tree)
 
                     g_node.name = g_node_name
 
@@ -463,8 +457,6 @@ class LabelGTC:
         self.logger.debug("-----------------\n"+" ".join([csename for csename in self.covSetEdge_minSGT]))
         self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=['name']))
         self.logger.debug('#####################')
-        print self.covSetEdge_minSGT
-        print self.genesTree.get_ascii(show_internal=True)
         for tree in [self.genesTree&csename for csename in self.covSetEdge_minSGT]:
 
             strTree = tree.write()
