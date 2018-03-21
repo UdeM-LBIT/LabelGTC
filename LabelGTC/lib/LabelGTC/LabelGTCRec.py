@@ -326,8 +326,8 @@ class LabelGTC:
                         if not sol_per_subtree[gup.name]:
                             sol_per_subtree[gup.name] = [gup]
                         #The new genes tree of the next instance
-                        
                         cur_g_sol.detach()
+                        cur_g_sol_name = cur_g_sol.name
 
                         #New instance with the current subtree and the reduced covering set of tree (limited to the subtree)
                         lgtc = LabelGTC(self.speciesTree, cur_g_sol, cst_subtree, self.threshold)
@@ -362,13 +362,13 @@ class LabelGTC:
                         g_sol_list.extend(modified_trees)
                         
                         for i, mdt in enumerate(modified_trees):
-                            mdt.name = cur_g_sol.name
+                            mdt.name = cur_g_sol_name
                             gup.add_child(mdt)
                             g_up_sol_list.append(gup.copy())
                             if i+1 < len(modified_trees):
                                 mdt.detach()
 
-
+                        cur_g_sol.name = cur_g_sol_name
                     g_sol_list = tree_filter(g_sol_list)
                     g_up_sol_list = tree_filter(g_up_sol_list)
 
