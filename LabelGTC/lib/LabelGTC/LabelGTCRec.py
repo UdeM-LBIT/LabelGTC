@@ -253,9 +253,7 @@ class LabelGTC:
         sub_leaves = []
 
         true_covSetEdge_minSGT = [self.genesTree&csename for csename in self.covSetEdge_minSGT]
-        print true_covSetEdge_minSGT
-        print self.genesTree.get_ascii(show_internal=True)
-
+        
         #Applying recursively the LabelGTC algorithm
         for g_node in self.genesTree.traverse("levelorder"):
 
