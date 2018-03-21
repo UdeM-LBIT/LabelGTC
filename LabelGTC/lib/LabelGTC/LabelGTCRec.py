@@ -318,6 +318,9 @@ class LabelGTC:
                         self.logger.debug("________________________________________________________________________________________________________________________")
                         #Using minSGT to resolve the subtree
                         modified_tree = lgtc.minSGT()
+                        modified_tree.name =  g_node_name
+                        #Attaching back the subtree to the current genesTree
+                        up.add_child(modified_tree)
 
                     #PolyRes case detected
                     elif lgtc.getCase() == "polyres":
@@ -326,18 +329,18 @@ class LabelGTC:
                             modified_trees = lgtc.getResultedTree()
                         else:
                             modified_trees = lgtc.init_polyRes()
+                        modified_tree.name =  g_node_name
+                        #Attaching back the subtree to the current genesTree
+                        up.add_child(modified_tree)
 
                     #Multi PolyRes case detected
                     elif lgtc.getCase() == "m-polyres":
 
                         #Using MPolyRes to resolve the subtree
                         modified_tree = lgtc.init_m_polyRes()
-
-
-                    modified_tree.name =  g_node_name
-
-                    #Attaching back the subtree to the current genesTree
-                    up.add_child(modified_tree)
+                        modified_tree.name =  g_node_name
+                        #Attaching back the subtree to the current genesTree
+                        up.add_child(modified_tree)
 
                     g_node.name = g_node_name
 
