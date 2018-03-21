@@ -74,6 +74,7 @@ parser.add_argument('-g', '--gtree', dest='genetree', help="Either the filename 
 parser.add_argument('-o', '--output', dest='outfile', help="Name of your output files with the corrected tree. When batch is specified, each corrected genetree will be printed in the appropriate output file. The genetree is printed on stdout if omitted.")
 parser.add_argument('--sep', dest='gene_sep', default="_", help="Gene-Specie separator for each leaf name in the genetree.")
 parser.add_argument('-c', '--covset', dest='covset', help="Covering set of trees: either a list of trees separated by ';' or a filename ", required=True)
+parser.add_argument('-l', '--lim', type=int, default=1, dest='limit', help="Maximum number of solutions")
 parser.add_argument('--spos', dest='spos', default="postfix", choices=("prefix", "postfix"), help="The position of the specie name according to the separator. Supported option are prefix and postfix")
 parser.add_argument('--seuil', type=float, dest="seuil", required=True, help="Branch contraction threshold, when the tree is binary. Use only when the tree is binary.")
 parser.add_argument('--cost', type=float, nargs=2, dest='costdl', help="Not implemented yet | D L : 2 float values, duplication and loss cost in this order")
@@ -152,14 +153,14 @@ for t in [gtree]+covering_set:
 # time execution
 start_time = time.time()
 
-lgtc = LabelGTC(sptree, gtree, covering_set, args.seuil)
+lgtc = LabelGTC(sptree, gtree, covering_set, args.seuil, limit=args.limit)
 lgtc.mergeResolutions()
 res = lgtc.getResultedTree()
-for leaf in res:
-    leaf.name = geneRemapping.get(leaf.name, leaf.name)
-
-end_time = time.time()
-
-output.write(res.write(format=9))
+res = res[:args.limit]
+for r in res: 
+    for leaf in r:
+        leaf.name = geneRemapping.get(leaf.name, leaf.name)
+    output.write(r.write(format=9))
 output.close()
+end_time = time.time()
 print("\nEND LabelGTC in : '%f'"%(-start_time + end_time))

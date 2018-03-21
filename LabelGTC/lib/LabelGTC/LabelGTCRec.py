@@ -24,13 +24,14 @@ import time
 
 import copy
 
-from ..PolyRes import ZhengPS
+from ..PolyRes import ZhengPS, PS
 from ..SGT import getMinSGT
 from ete3 import Tree
 
 from ..TreeLib import *
 from ..TreeLib import TreeUtils, TreeClass
 import logging
+from collections import defaultdict as ddict
 
 #Special case detected
 special_case = False
@@ -45,6 +46,19 @@ MAX_SOL = None
 global clades_to_preserve_sgt
 clades_to_preserve_sgt = []
 
+global sol_per_subtree
+sol_per_subtree = ddict(list)
+
+
+def tree_filter(treelist):
+    to_rem = []
+    for rx1 in treelist:
+        for rx2 in treelist:
+            if rx1 != rx2 and rx1.get_topology_id() == rx2.get_topology_id():
+                to_rem.append(rx1)
+    for rx in to_rem:
+        treelist.remove(rx)
+    return treelist
 
 
 class LabelGTC:
@@ -62,7 +76,7 @@ class LabelGTC:
     lgtc.mergeResolutions()
     """
 
-    def __init__(self, speciesTree, genesTree, covSetTree, threshold, debug=None, limit=None):
+    def __init__(self, speciesTree, genesTree, covSetTree, threshold, debug=None, limit=1):
 
         global nbCalls
         nbCalls += 1
@@ -95,7 +109,7 @@ class LabelGTC:
         self.logger = logging.getLogger("LabelGTC")
 
         #The returned tree
-        self.resultedTree = None
+        self.resultedTree = []
 
         if debug is not None:
             self.logger.setLevel(logging.DEBUG)
@@ -260,9 +274,9 @@ class LabelGTC:
         sub_leaves = []
 
         true_covSetEdge_minSGT = [self.genesTree&csename for csename in self.covSetEdge_minSGT]
-
+        global sol_per_subtree
         #Applying recursively the LabelGTC algorithm
-        for g_node in self.genesTree.traverse("levelorder"):
+        for g_node in self.genesTree.traverse("postorder"):
 
             #Testing if all the covering set of edges has been checked
             if sub_leaves == self.all_leaves:
@@ -302,55 +316,66 @@ class LabelGTC:
                             cst_subtree.append(tree)
 
                     #This node is the root of the tree of genes of the new instance
-                    g_node.add_features(root=1)
+                    g_sol_list = []
+                    g_up_sol_list = []
 
-                    up = g_node.up
+                    for cur_g_sol in sol_per_subtree.get(g_node.name, [g_node]):
+                        cur_g_sol.add_features(root=1)
 
-                    #The new genes tree of the next instance
-                    g_node.detach()
+                        gup = cur_g_sol.up
+                        if not sol_per_subtree[gup.name]:
+                            sol_per_subtree[gup.name] = [gup]
+                        #The new genes tree of the next instance
+                        
+                        cur_g_sol.detach()
 
-                    #New instance with the current subtree and the reduced covering set of tree (limited to the subtree)
-                    lgtc = LabelGTC(self.speciesTree, g_node, cst_subtree, self.threshold)
+                        #New instance with the current subtree and the reduced covering set of tree (limited to the subtree)
+                        lgtc = LabelGTC(self.speciesTree, cur_g_sol, cst_subtree, self.threshold)
 
-                    #Resolving the subtree
-                    lgtc.mergeResolutions()
+                        #Resolving the subtree
+                        lgtc.mergeResolutions()
 
-                    lgtc.binaryLabeling()
+                        lgtc.binaryLabeling()
 
-                    #Global case detected
-                    if lgtc.getCase() == "global":
-                        self.logger.debug("CALLING ________________________________________________________________________________________________________________")
-                        self.logger.debug(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
-                        self.logger.debug("________________________________________________________________________________________________________________________")
-                        #Using minSGT to resolve the subtree
-                        modified_tree = lgtc.minSGT()
+                        modified_trees = []
+                        #Global case detected
+                        if lgtc.getCase() == "global":
+                            self.logger.debug("CALLING ________________________________________________________________________________________________________________")
+                            self.logger.debug(lgtc.getGenesTree().get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
+                            self.logger.debug("________________________________________________________________________________________________________________________")
+                            #Using minSGT to resolve the subtree
+                            modified_trees = lgtc.minSGT()
 
-                        modified_tree.name =  g_node.name
+                        #PolyRes case detected
+                        elif lgtc.getCase() == "polyres":
+                            #Using polyRes to resolve the subtree
+                            if lgtc.resultedTree:
+                                modified_trees = lgtc.getResultedTree()
+                            else:
+                                modified_trees = lgtc.init_polyRes()
 
-                        #Attaching back the subtree to the current genesTree
-                        up.add_child(modified_tree)
+                        #Multi PolyRes case detected
+                        elif lgtc.getCase() == "m-polyres":
+                            #Using MPolyRes to resolve the subtree
+                            modified_trees = lgtc.init_m_polyRes()
+                       
+                        g_sol_list.extend(modified_trees)
+                        
+                        for i, mdt in enumerate(modified_trees):
+                            mdt.name = cur_g_sol.name
+                            gup.add_child(mdt)
+                            g_up_sol_list.append(gup.copy())
+                            if i+1 < len(modified_trees):
+                                mdt.detach()
 
-                    #PolyRes case detected
-                    elif lgtc.getCase() == "polyres":
-                        #Using polyRes to resolve the subtree
-                        modified_tree = lgtc.init_polyRes()
 
-                        modified_tree.name =  g_node.name
+                    g_sol_list = tree_filter(g_sol_list)
+                    g_up_sol_list = tree_filter(g_up_sol_list)
 
-                        #Attaching back the subtree to the current genesTree
-                        up.add_child(modified_tree)
+                    sol_per_subtree[g_node.name] = g_sol_list
+                    sol_per_subtree[gup.name] = g_up_sol_list
 
-                    #Multi PolyRes case detected
-                    elif lgtc.getCase() == "m-polyres":
-
-                        #Using MPolyRes to resolve the subtree
-                        modified_tree = lgtc.init_m_polyRes()
-
-                        modified_tree.name =  g_node.name
-
-                        #Attaching back the subtree to the current genesTree
-                        up.add_child(modified_tree)
-
+        #self.resultedTree = self.genesTree
         #On first instance
         if self.id == 1:
             self.logger.debug("________________________________________________________________________________________________________________________")
@@ -358,20 +383,20 @@ class LabelGTC:
             self.logger.debug("________________________________________________________________________________________________________________________")
 
             #Using minSGT to resolve the entire genesTree
-            self.resultedTree = self.minSGT()
+            sols = []
+            for gtree in sol_per_subtree[self.genesTree.name]:
+                sols.extend(self.minSGT(gtree))
 
             global clades_to_preserve_sgt
             self.logger.debug(clades_to_preserve_sgt)
 
-            for tree in clades_to_preserve_sgt:
-                self.logger.debug(tree)
-
+            self.resultedTree = sols
         return self.resultedTree
 
 
     def polyRes(self):
         """Using PolytomySolver Algorithm"""
-
+        global MAX_SOL
         self.logger.debug(self.genesTree)
 
         dupcost = 1
@@ -382,20 +407,33 @@ class LabelGTC:
         self.speciesTree.label_internal_node()
 
         #Maping the genesTree
-        lcamap = TreeUtils.lcaMapping(self.genesTree, self.speciesTree, multspeciename=False)
+        gtree = self.genesTree.copy()
+        stree = self.speciesTree.copy()
+        for node in gtree.iter_internal_node(enable_root=True):
+            node.name = ''
+        for node in stree.iter_internal_node(enable_root=True):
+            node.name = ''
+        lcamap = TreeUtils.lcaMapping(gtree, stree, multspeciename=False)
 
-        self.logger.debug(self.speciesTree.write(features=[]))
-        self.logger.debug(self.genesTree)
+        self.logger.debug(stree.write(features=[]))
+        self.logger.debug(gtree)
+        #Solving the tree using zheng algo
+        
+        #gts = ZhengPS.DynPolySolver(gtree, stree, lcamap, dupcost, losscost)
+        #r = [gts.reconstruct()]
+        # using polytomysolver (multiple solution)
+        gts = PS.GeneTreeSolver(gtree, stree, lcamap, dupcost, losscost)
+        gts.labelInternalNodes(gtree)
+        gts.labelInternalNodes(stree)
+        #gts.debug = False
+        gts.use_dp = False
+        r = [TreeClass(x + ";") for x in gts.solvePolytomies(MAX_SOL)]
 
-        #Solving the tree
-        gts = ZhengPS.DynPolySolver(self.genesTree, self.speciesTree, lcamap, dupcost, losscost)
-        r = [gts.reconstruct()]
+        if MAX_SOL > 1:
+            MAX_SOL = max(MAX_SOL - (len(r)-1), 1)
 
         self.logger.debug("NBSOLS = %d"%len(r))
-        self.logger.debug(r)
-        print r, self.id
         #Reconstructing the result as a TreeClass object
-        r = TreeClass(str(r[0]))
         return r
 
 
@@ -411,7 +449,6 @@ class LabelGTC:
                 g_node.delete()
 
         #Calling polyRes
-        print 'init'
         self.resultedTree = self.polyRes()
         return self.resultedTree
 
@@ -425,16 +462,18 @@ class LabelGTC:
         self.logger.debug(self.genesTree)
 
         #Calling polyRes
-        print 'init mpoly'
-
         self.resultedTree = self.polyRes()
         return self.resultedTree
 
 
 
-    def minSGT(self):
+    def minSGT(self, gtree=None):
         """Using minSGT algorithm"""
+        if gtree is None:
+            gtree = self.genesTree
 
+        global MAX_SOL
+        
         #Clades to preserve formatted as a string
         ctp_minSGT = ""
 
@@ -457,18 +496,20 @@ class LabelGTC:
 
         #Formating the clades to preserve for the minSGT call
         for tree in clades_to_preserve_sgt:
-
-            strTree = tree.write()
-            newStrTree = strTree.replace("_", "__")
-            ctp_minSGT += newStrTree
+            # now check if present in current genetree
+            for node in gtree.traverse():
+                if node.get_topology_id() == tree.get_topology_id():
+                    strTree = tree.write()
+                    newStrTree = strTree.replace("_", "__")
+                    ctp_minSGT += newStrTree
 
         ctp_minSGT2 = ctp_minSGT.replace("____", "__")
 
         #Formating the covering set of trees for the minSGT call
         self.logger.debug("-----------------\n"+" ".join([csename for csename in self.covSetEdge_minSGT]))
-        self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=['name']))
+        self.logger.debug(gtree.get_ascii(show_internal=True, attributes=['name']))
         self.logger.debug('#####################')
-        for tree in [self.genesTree&csename for csename in self.covSetEdge_minSGT]:
+        for tree in [gtree&csename for csename in self.covSetEdge_minSGT]:
 
             strTree = tree.write()
             newStrTree = strTree.replace("_", "__")
@@ -498,7 +539,7 @@ class LabelGTC:
         self.logger.debug(ctp_minSGT2)
         self.logger.debug("\n")
         self.logger.debug("GENES TREE :")
-        self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["support", "name"]))
+        self.logger.debug(gtree.get_ascii(show_internal=True, attributes=["support", "name"]))
         self.logger.debug("\n")
         self.logger.debug("COV SET TREE MINSGT :")
         self.logger.debug(self.covSetEdge_minSGT)
@@ -508,17 +549,22 @@ class LabelGTC:
         self.logger.debug("\n")
 
         #MinSGT call
-        res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "", limit=20)
+        res = getMinSGT(gcontent, scontent, False, ctp_minSGT2, "", "", limit=MAX_SOL)
 
         #Reformating the resulted tree
         res2 = res.replace("__","_")
 
-        returned_tree = TreeClass(res2.strip().split("\n")[-1])
+        returned_tree = [TreeClass(x) for x in res2.strip().split("\n")]
 
-        self.logger.debug(returned_tree)
-
+        self.resultedTree = returned_tree
+        self.logger.debug("NBSOLS = %d"%len(self.resultedTree))
         #Adding the resulted tree to the clades to preserve
-        clades_to_preserve_sgt.append(returned_tree)
+        # TODO !!
+
+        if MAX_SOL > 1:
+            MAX_SOL = max(MAX_SOL - (len(returned_tree)-1), 1)
+
+        clades_to_preserve_sgt.append(returned_tree[0])
 
         return returned_tree
 
@@ -550,7 +596,6 @@ class LabelGTC:
         #M-PolyRes case detected
         if onlyLeaves:
             self.logger.debug("-------> Using M-PolyRes algorithm")
-
             self.case = "m-polyres"
 
             #Using M-PolyRes to resolve the tree
@@ -601,34 +646,29 @@ class LabelGTC:
 
                 self.case = "polyres"
 
-                #Using polyRes to resolve the tree
-                print 'going in polyres'
+                #Using polyRes to resolve the tree                
                 self.resultedTree = self.init_polyRes()
 
             #MinTRS case detected
-            if minTRSCompatible and cpt > 2:
+            elif minTRSCompatible and cpt > 2:
                 self.logger.debug("-------> Using minTRS algorithm")
-
                 special_case = True
-
                 self.case = "global"
 
                 #Referring to the global case as minTRS resolution is not implemented
                 self.resultedTree = self.globalProcessing()
 
             #MinSGT case detected, considered as a global case
-            if minSGTCompatible:
+            elif minSGTCompatible:
                 self.logger.debug("-------> Using minSGT algorithm")
-
                 self.case = "global"
 
                 #Using the global case processing to resolve the tree
                 self.resultedTree = self.globalProcessing()
 
             #No special case detected
-            if not (polyResCompatible or minTRSCompatible or minSGTCompatible):
+            else:
                 self.logger.debug(" -------> Using globalProcessing")
-
                 self.case = "global"
 
                 #Using the global case processing to resolve the tree
