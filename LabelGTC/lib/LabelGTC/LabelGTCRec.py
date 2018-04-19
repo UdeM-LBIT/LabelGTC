@@ -15,23 +15,19 @@ Expected input:
 
 import os
 import sys
+import re
+import time
+import copy
+import logging
+import itertools
 
 from sys import stdout
-
-import re
-
-import time
-
-import copy
-
+from ete3 import Tree
+from collections import defaultdict as ddict
 from ..PolyRes import ZhengPS, PS
 from ..SGT import getMinSGT
-from ete3 import Tree
-
 from ..TreeLib import *
 from ..TreeLib import TreeUtils, TreeClass
-import logging
-from collections import defaultdict as ddict
 
 #Special case detected
 special_case = False
@@ -375,13 +371,35 @@ class LabelGTC:
         #self.resultedTree = self.genesTree
         #On first instance
         if self.id == 1:
-            print " All sols ", sol_per_subtree[self.genesTree.name]
-            print sol_per_subtree
+            
             self.logger.debug("____________________________________________________________________")
             self.logger.debug(self.genesTree.get_ascii(show_internal=True, attributes=["binconfidence", "name", "lcse"]))
             self.logger.debug("____________________________________________________________________")
 
             #Using minSGT to resolve the entire genesTree
+            sols = sol_per_subtree[self.genesTree.name]
+            npl_res = []
+            valid_keys = [x for x in sol_per_subtree if sol_per_subtree.get(x)]
+            if not sols:
+                for res in valid_keys:
+                    try:
+                        tmp = self.genesTree&res
+                        ptmp = set([])
+                        while tmp.up != None:
+                            ptmp.add(tmp.up.name)
+                            tmp = tmp.up
+                        if not ptmp.intersection(valid_keys):
+                            npl_res.append(res)
+                    except:
+                        pass
+                
+                npl_res_trees = [sol_per_subtree[x] for x in npl_res]
+                for t_comb in itertools.product(*npl_res_trees):
+                    t = self.genesTree.copy()
+                    for i, nn in enumerate(t_comb):
+                        (t&npl_res[i]).replace_by(nn)
+                    sol_per_subtree[self.genesTree.name].append(t)
+
             sols = []
             for gtree in sol_per_subtree[self.genesTree.name]:
                 sols.extend(self.minSGT(gtree))
